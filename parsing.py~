@@ -1,0 +1,35 @@
+import newspaper
+from newspaper import Article
+
+def get_links(itemList, numLinks):
+    print("     Getting " + str(numLinks) + " links.")
+    links = []
+    i = 0
+    while i < numLinks:
+        item = itemList[i][1]
+        links.append(item)
+        i = i + 1
+    return links
+
+def pull_article(url):
+    print("     Pulling article...")
+    article = Article(url)
+    article.download()
+    print("     Article pulled.")
+    return article
+
+def analyse_article(article, elems):
+    print("     Parsing article...")
+    article.parse()
+    article.nlp()
+    breakdown = {}
+    for elem in elems:
+        payload = getattr(article, elem)
+        breakdown.update({elem:payload})
+    print("     Article parsed.")
+    return breakdown
+
+
+
+
+

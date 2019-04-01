@@ -1,0 +1,72 @@
+import parsing
+import newspaper
+import textwrap
+
+ARTICLE_ELEMENTS = ["title", "publication_date", "authors", "summary", "meta_description", "keywords", "meta_keywords", "text"]
+LINE_WIDTH = 80
+TAG_LENGTH = 18
+
+def process(source, limit):
+    print("Getting newspaper hot sources...")
+    inputList = newspaper.api.hot(source)
+    print("Sources acquired.")
+    print("\n")
+    
+    print("Stripping links from provided list...")
+    linkList = parsing.get_links(inputList, limit)
+    print("Links stripped.")
+    print("\n")
+    
+    print("Commencing articles download...")
+    articleList = []
+    for link in linkList:
+        article = parsing.pull_article(link)
+        articleList.append(article)
+    print("Articles downloaded.")
+    print("\n")
+
+    print("Conducting analysis...")
+    analysedList = []
+    for article in articleList:
+        analysed = parsing.analyse_article(article, ARTICLE_ELEMENTS)
+        analysedList.append(analysed)
+    print("Analysis complete.")
+
+    return analysedList
+
+def print_analysis(analysis, noText = True):
+    """
+    NOTE: you must pass False in the third argument to output full article text.
+    """
+    print("Outputting analysis...")
+    for elem in analysis:
+        print("*****")
+        for item in ARTICLE_ELEMENTS:
+            if item == "text" and noText == True:
+                continue
+            target, payload = dump_list(item, elem[item])
+            print_line(target, payload)
+        print("*****")
+    print("Your analysis is served.")
+
+def print_line(paddedTag, infoList):
+    print(paddedTag.ljust(TAG_LENGTH) + infoList[0])
+    i = 1
+    while i < len(infoList):
+        print(infoList[i].rjust(len(infoList[i]) + TAG_LENGTH))
+        i = i + 1
+
+
+def dump_list(tag, info):
+    paddedTag = tag + ":"
+    if type(info) != str:
+        info = str(info)
+    else:
+        info = str(info)
+    infoList = textwrap.wrap(info, LINE_WIDTH) 
+    return paddedTag, infoList
+
+
+
+ 
+

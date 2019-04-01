@@ -1,0 +1,2 @@
+https://news.google.com/rss/search?q=market+risk
+https://news.google.com/rss/search?q=credit+risk

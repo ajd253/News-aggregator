@@ -1,7 +1,9 @@
+import feedparser
+
 import newspaper
 from newspaper import Article
 
-def get_links(itemList, numLinks):
+def get_links(RSSFeed, numLinks):
     """
     Extracts urls from an n-dimensional list.
     itemList must be a list of lists, and links must be indexed to itemList[n][1]
@@ -10,14 +12,14 @@ def get_links(itemList, numLinks):
     Returns: list of urls
 
     """
-    print("     Getting " + str(numLinks) + " links.")
-    links = []
+    print("     Getting " + str(numLinks) + " article links.")
+    parsedFeed = feedparser.parse(RSSFeed)
+    articleLinks = []
     i = 0
-    while i < numLinks:
-        item = itemList[i][1]
-        links.append(item)
+    while i < numLinks and i < len(parsedFeed.entries):
+        articleLinks.append(parsedFeed.entries[i].link)
         i = i + 1
-    return links
+    return articleLinks
 
 def pull_article(url):
     """
@@ -26,8 +28,10 @@ def pull_article(url):
     """
     
     print("     Pulling article...")
-    article = Article(url)
+    article = Article(url, language="en")
+    article.build()
     article.download()
+
     print("     Article pulled.")
     return article
 
@@ -48,9 +52,13 @@ def analyse_article(article, elems):
     # Create dictionary container
     breakdown = {}
     # Add information matching elements to breakdown
+    for attr, value in article.__dict__.items():    
+        print(str(attr) + ": " + str(value))
+    
     for elem in elems:
-        payload = getattr(article, elem)
-        breakdown.update({elem:payload})
+            payload = getattr(article, elem)
+            breakdown.update({elem:payload})
+    
     print("     Article parsed.")
 
     return breakdown
@@ -70,8 +78,3 @@ def to_str(bytes_or_str):
     else:
         value = bytes_or_str
     return value # Instance of str
-
-
-
-
-

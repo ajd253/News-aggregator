@@ -1,6 +1,8 @@
 
 # TODO: look at google custom searches, this will require work with .json format
 
+# TODO: reconcile modules with desktop Python installation
+
 import newspaper
 import textwrap
 
@@ -8,12 +10,12 @@ import dataset
 
 import parsing
 
-ARTICLE_ELEMENTS = ["title", "publish_date", "authors", "url", "meta_site_name", "summary", "meta_description",
-                    "keywords", "meta_keywords", "text"]
+ARTICLE_ELEMENTS = ["title", "publish_date", "authors", "url", "summary", "meta_description", "keywords", "meta_keywords", "text"]
+
 LINE_WIDTH = 180
 TAG_LENGTH = 18
 
-NUM_ARTICLES = 10
+NUM_ARTICLES = 2
 
 FEEDS_FILE = "feeds.txt"
 
@@ -30,24 +32,15 @@ def process(source, limit):
     """
     # TODO: reformulate for RSS feeds, create another function for other links
 
-    print("Getting newspaper hot sources...")
-    # Get list of links from RSS feed
-    # TODO; CHECK THIS
-    inputList = newspaper.api.hot(source)
-    print("Sources acquired.")
-    print("\n")
-    
-    print("Stripping links from provided list...")
-    # Strip urls from list
-    # TODO: just get the links straight - it's simpler
-    linkList = parsing.get_links(inputList, limit)
-    print("Links stripped.")
-    print("\n")
+    # Getting article links
+    print("Getting article links from RSS feeds.")
+    feedLinks = parsing.get_links(source, limit)
+    print("Article links acquired.")
     
     print("Commencing articles download...")
     # Download articles and gather into list
     articleList = []
-    for link in linkList:
+    for link in feedLinks:
         article = parsing.pull_article(link)
         articleList.append(article)
     print("Articles downloaded.")
@@ -75,13 +68,15 @@ def print_analysis(analysis, noText=True):
     Returns: None
     """
     print("Outputting analysis...")
-    for elem in analysis:
+    for item in analysis:
         print("*****")
-        for item in ARTICLE_ELEMENTS:
-            if item == "text" and noText is True:
+        printTags = ['
+        for elem in ARTICLE_ELEMENTS:
+            if elem == "text" and noText is True:
                 continue
-            target, payload = dump_list(item, elem[item])
-            print_line(target, payload)
+            if hasattr(item, elem):
+                target, payload = dump_list(elem, item[elem])
+                print_line(target, payload)
         print("*****")
     print("Your analysis is served.")
 
@@ -129,14 +124,25 @@ def get_feed_list(feeds):
    
     Returns: list of RSS feeds.
     """
+
+    # Getting RSS feed URLs
+    print("Getting link list from source file.")
     feedList = []
     feedsFile = open(feeds, "r")
     for link in feedsFile:
         print(link)
         feedList.append(link.strip("\n"))
     feedsFile.close()
+    print("RSS links acquired.")
+    print("\n")
     return feedList
 
+def insert_article(article, table, tags):
+    record = dict()
+    for tag in tags:
+        if hasattr(article, tag):
+            record.update({tag:article[tag]})
+    table.insert(record)
 
 if __name__ == "__main__":
     feeds = get_feed_list(FEEDS_FILE)
@@ -145,15 +151,11 @@ if __name__ == "__main__":
     for feed in feeds:
         news = process(feed, NUM_ARTICLES)
         for article in news:
-            if not articlesTable.find_one(url=article["url"]):
-                record = dict()
-                record.update({"title":article["title"], "url":article["url"]})
+            insert_article(article, articlesTable, ARTICLE_ELEMENTS)
+            print_analysis([article])            
                 #for elem in ARTICLE_ELEMENTS:
                 #    record.update({elem:article[elem]})
                 #for i, e in article:
                 #    record.update({i:str(e)})
-                articlesTable.insert(record)
-    for a in articlesTable:
-        print(a)
     db.commit()
 

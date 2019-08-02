@@ -1,2 +1,13 @@
-https://news.google.com/rss/search?q=market+risk
-https://news.google.com/rss/search?q=credit+risk
+https://feeds.feedburner.com/securityweek?fmt=xml
+https://www.finextra.com/rss/channel.aspx?channel=retail
+https://www.finextra.com/rss/channel.aspx?channel=transaction
+https://www.finextra.com/rss/channel.aspx?channel=wholesale
+https://www.finextra.com/rss/channel.aspx?channel=blockchain
+https://www.finextra.com/rss/channel.aspx?channel=cards
+https://www.finextra.com/rss/channel.aspx?channel=mobile
+https://www.finextra.com/rss/channel.aspx?channel=payments
+https://www.finextra.com/rss/channel.aspx?channel=pto
+https://www.finextra.com/rss/channel.aspx?channel=risk
+https://www.finextra.com/rss/channel.aspx?channel=security
+https://www.finextra.com/rss/channel.aspx?channel=startups
+https://www.finextra.com/rss/channel.aspx?channel=execution

@@ -1,0 +1,7 @@
+https://feeds.feedburner.com/securityweek
+https://news.google.com/rss/search?q=market+risk
+https://news.google.com/rss/search?q=credit+risk
+https://www.realwire.com/rss/feeds.asp?cat=Financial+Services
+https://www.cnbc.com/rss-feeds/
+https://www.economist.com/rss
+https://www.thebanker.com/Information/Services/RSS

@@ -1,84 +1,65 @@
+# Author: Alex J Davies (alexjdavies.net)
 
-# TODO: look at google custom searches, this will require work with .json format
-
-# TODO: reconcile modules with desktop Python installation
-
-import newspaper
+import sys
 import textwrap
 
 import dataset
 
 import parsing
 
-ARTICLE_ELEMENTS = ["title", "publish_date", "authors", "url", "summary", "meta_description", "keywords", "meta_keywords", "text"]
+from config import LINE_WIDTH, TAG_LENGTH
+from config import FEEDS_FILE, DATABASE_URL
 
-LINE_WIDTH = 180
-TAG_LENGTH = 18
+from output import vprint
 
-NUM_ARTICLES = 2
-
-FEEDS_FILE = "feeds.txt"
-
-DATABASE_URL = "sqlite:///article_store.db"
+ARTICLE_ELEMENTS = ["title", "publish_date", "authors", "url", "summary", "meta_description", "keywords", "meta_keywords", "text"]  
+PRINT_ELEMENTS = ["title", "publish_date", "authors", "url", "summary", "meta_description", "keywords", "meta_keywords", "text"]
 
 
 def process(source, limit):
     """
-    Grabs n articles from source, parses and analyses them, where limit specifies n.
-    source must be an RSS feed (at the moment can be any url though).
+    Grabs n articles from source, parses and analyses them, where limit specifies maximum n.
+    source must be an RSS feed.
     limit must be an integer.
 
-    Returns: list of dictionaries containing tags, information.
+    Returns: list of dictionaries, each containing the tags and parsed information of one article.
     """
-    # TODO: reformulate for RSS feeds, create another function for other links
 
     # Getting article links
-    print("Getting article links from RSS feeds.")
     feedLinks = parsing.get_links(source, limit)
-    print("Article links acquired.")
-    
-    print("Commencing articles download...")
+
     # Download articles and gather into list
     articleList = []
     for link in feedLinks:
-        article = parsing.pull_article(link)
+        article = parsing.get_article(link)
         articleList.append(article)
-    print("Articles downloaded.")
-    print("\n")
 
-    print("Conducting analysis...")
-    # Run analysis on each article
+    # Analyse each article
     analysedList = []
     for article in articleList:
         analysed = parsing.analyse_article(article, ARTICLE_ELEMENTS)
         analysedList.append(analysed)
-    print("Analysis complete.")
+
+    vprint(verbose, str(len(articleList)) + " articles processed.")
 
     return analysedList
 
 
-def print_analysis(analysis, noText=True):
+def print_article(articleDict, noText=True):
     """
-    Prints articles' tag, information pairs.
-    analysis must be a list of newspaper.article typed objects.
+    Wrapper to print the tag, information pairs from a dictionary constructed from an Article object.
+    articleDict must be a dictionary.
     noText must be True or False.
-    
+
     NOTE: you must pass False in the third argument to output full article text.
 
     Returns: None
     """
-    print("Outputting analysis...")
-    for item in analysis:
-        print("*****")
-        printTags = ['
-        for elem in ARTICLE_ELEMENTS:
-            if elem == "text" and noText is True:
-                continue
-            if hasattr(item, elem):
-                target, payload = dump_list(elem, item[elem])
-                print_line(target, payload)
-        print("*****")
-    print("Your analysis is served.")
+    print("*****")
+    for tag in PRINT_ELEMENTS:
+        target, payload = dump_list(tag, articleDict[tag])
+        print_line(target, payload)
+    print("*****")
 
 
 def print_line(paddedTag, infoList):
@@ -108,11 +89,7 @@ def dump_list(tag, info):
     Returns:   string.
     """
     paddedTag = tag + ":"
-    #TODO: redundant logic branching
-    if type(info) != str:
-        info = str(info)
-    else:
-        info = str(info)
+    info = str(info)
     infoList = textwrap.wrap(info, LINE_WIDTH)
     return paddedTag, infoList
 
@@ -121,41 +98,111 @@ def get_feed_list(feeds):
     """
     Gets RSS feed urls from specified text file.
     feeds must be a string specifying the location to a .txt file.
-   
+
     Returns: list of RSS feeds.
     """
 
     # Getting RSS feed URLs
-    print("Getting link list from source file.")
+    vprint(verbose, "Getting link list from source file.")
     feedList = []
     feedsFile = open(feeds, "r")
     for link in feedsFile:
-        print(link)
         feedList.append(link.strip("\n"))
     feedsFile.close()
-    print("RSS links acquired.")
-    print("\n")
+    vprint(verbose, str(len(feedList)) + " RSS links acquired.")
     return feedList
 
+
 def insert_article(article, table, tags):
+    """
+    Inserts tag, information pairs of article into table of a database.
+
+    Returns:    None.
+    """
+
     record = dict()
     for tag in tags:
         if hasattr(article, tag):
-            record.update({tag:article[tag]})
+            record.update({tag: article[tag]})
     table.insert(record)
 
+
+def parse_args(args):
+    """
+    Checks command line arguments for sanity. 
+
+    Returns:    int, boolean pair.
+    """
+
+    if len(args) < 2:
+        print("ERROR: Too few arguments. Please provide an integer in the first argument for the number of articles to analyse from each feed.")
+        quit()
+
+    if len(args) == 2:
+        try:
+            if int(args[1]) > 0:
+                numArticles = int(args[1])
+                verbose = False
+                parsing.verbose = False
+                print("Verbose mode is OFF.")
+        except ValueError:
+            print("ERROR: Incorrect argument type. Please provide an integer in the first argument for the number of articles to analyse from each feed.")
+            quit()
+
+    if len(args) == 3:
+        try:
+            if int(args[1]) > 0:
+                numArticles = int(args[1])
+        except ValueError:
+            print("ERROR: Incorrect argument type. Please provide an integer in the first argument for the number of articles to analyse from each feed.")
+            quit()
+
+        if args[2] == "-v" or args[2] == "-verbose":
+            verbose = True
+            parsing.verbose = True
+            print("Verbose mode is ON.")
+        else:
+            verbose = False
+            parsing.verbose = False
+            print("Verbose mode is OFF.")
+
+    if len(args) > 3:
+        print("ERROR: Too many arguments supplied.")
+        quit()
+
+    return numArticles, verbose
+
+
 if __name__ == "__main__":
+    print(sys.argv)
+    # Parse command line arguments
+    numArticles, verbose = parse_args(sys.argv)
+    print("---")
+
+    # Get RSS feeds from file
     feeds = get_feed_list(FEEDS_FILE)
+    numFeeds = len(feeds)
+
+    # Connect to SQL database and create/specify table
     db = dataset.connect(DATABASE_URL)
     articlesTable = db["article"]
-    for feed in feeds:
-        news = process(feed, NUM_ARTICLES)
+
+    for index, feed in enumerate(feeds):
+        # Construct list of processed articles from feed
+        print("Processing " + str(index+1) + " of " + str(numFeeds) + " feeds.")
+        news = process(feed, numArticles)
+
+        # Insert each article into the database and print its tag, information pairs
         for article in news:
             insert_article(article, articlesTable, ARTICLE_ELEMENTS)
-            print_analysis([article])            
-                #for elem in ARTICLE_ELEMENTS:
-                #    record.update({elem:article[elem]})
-                #for i, e in article:
-                #    record.update({i:str(e)})
-    db.commit()
+            print_article(article)
+            """
+            for elem in ARTICLE_ELEMENTS:
+                record.update({elem:article[elem]})
+            for i, e in article:
+                record.update({i:str(e)})
+            """
+        print("Feed processed.\n")
 
+    # Write to database
+    db.commit()

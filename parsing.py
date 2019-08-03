@@ -1,65 +1,70 @@
+# Author: Alex J Davies (alexjdavies.net)
+
 import feedparser
 
-import newspaper
 from newspaper import Article
+
+from output import vprint
+
+verbose = False
+
 
 def get_links(RSSFeed, numLinks):
     """
-    Extracts urls from an n-dimensional list.
-    itemList must be a list of lists, and links must be indexed to itemList[n][1]
+    Scrape n article URLs from an RSS feed, where n=numLinks.
+    RSSFeed must be a string holding an RSS feed URL.
     numLinks must be an integer.
-    
-    Returns: list of urls
 
+    Returns: list of article urls.
     """
-    print("     Getting " + str(numLinks) + " article links.")
+
+    vprint(verbose, str("Getting " + str(numLinks) + " article links from the feed at " + RSSFeed + "..."))
     parsedFeed = feedparser.parse(RSSFeed)
     articleLinks = []
     i = 0
     while i < numLinks and i < len(parsedFeed.entries):
         articleLinks.append(parsedFeed.entries[i].link)
         i = i + 1
+    vprint(verbose, "Article links acquired.\n")
     return articleLinks
 
-def pull_article(url):
+
+def get_article(url):
     """
+    Downloads an article from url.
     url must be a string.
+
     Returns: instance of newspaper.article.
     """
-    
-    print("     Pulling article...")
-    article = Article(url, language="en")
-    article.build()
-    article.download()
 
-    print("     Article pulled.")
+    vprint(verbose, "Downloading article from " + url + " ...")
+    article = Article(url, language="en")
+    article.download()
+    vprint(verbose, "Article downloaded.\n")
+
     return article
+
 
 def analyse_article(article, elems):
     """
-    Scrapes information from article that matches tags specified in elems.
+    Parses article for information that matches tags specified in elems, then performs NLP on that information.
     article must be an object of type newspaper.article.
     elems must be a list of tags to scrape from article.
-    
+
     Returns: dictionary of tags and matching data.
     """
-    
-    print("     Parsing article...")
+
+    vprint(verbose, "Parsing and analysing article...")
     # Parse article and conduct NLP analysis using newspaper supplied methods
     article.parse()
     article.nlp()
 
-    # Create dictionary container
     breakdown = {}
-    # Add information matching elements to breakdown
-    for attr, value in article.__dict__.items():    
-        print(str(attr) + ": " + str(value))
-    
     for elem in elems:
-            payload = getattr(article, elem)
-            breakdown.update({elem:payload})
-    
-    print("     Article parsed.")
+        payload = getattr(article, elem)
+        breakdown.update({elem: payload})
+
+    vprint(verbose, "Parsing and analysis complete.")
 
     return breakdown
 
@@ -74,7 +79,7 @@ def to_bytes(bytes_or_str):
 
 def to_str(bytes_or_str):
     if isinstance(bytes_or_str, bytes):
-        value = bytes_or_str.decode() # uses 'utf-8' for encoding
+        value = bytes_or_str.decode()  # uses 'utf-8' for encoding
     else:
         value = bytes_or_str
-    return value # Instance of str
+    return value  # Instance of str

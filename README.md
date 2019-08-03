@@ -66,8 +66,8 @@ Future: Additional functionality to parse and analyse custom Google searches.
     > python handler.py n [-v]
     
 * Options are specified as follows:
-    * n             [required] the number of articles to download from each RSS feed. It must be an integer > 0.
-    * -v, -verbose  [optional] provides additional output detailing the aggregator's progress.
+    * n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[required] the number of articles to download from each RSS feed. It must be an integer > 0.
+    * -v, -verbose&nbsp;&nbsp;[optional] provides additional output detailing the aggregator's progress.
 
 # Requirements:
 * Newspaper module (pypi.org/project/newspaper3k) 

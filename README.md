@@ -1,6 +1,8 @@
 # News-aggregator
 Now:    A tool for aggregating articles from RSS feeds. Currently these are dumped into a SQL database, but this isn't fully functional currently. Information parsed/analysed from articles is printed as tag, information pairs.
+
 Future: Additional functionality to parse and analyse custom Google searches.
+
 ...
 
 # Sample output
@@ -59,18 +61,22 @@ Future: Additional functionality to parse and analyse custom Google searches.
 
 # How to use
 * Specify your feeds file in config.py.
+
 * Run the following command:
     > python handler.py n [-v]
+    
 * Options are specified as follows:
     * n             [required] the number of articles to download from each RSS feed. It must be an integer > 0.
     * -v, -verbose  [optional] provides additional output detailing the aggregator's progress.
 
 # Requirements:
 * Newspaper module (pypi.org/project/newspaper3k) 
+
 * Dataset module (dataset.readthedocs.io)
 
 # To do:
 * Implement full database functionality.
+
 * Refactor code.
 
 Developed by Alex J Davies, alex@alexjdavies.net.
